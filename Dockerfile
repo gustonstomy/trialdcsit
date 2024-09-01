@@ -1,28 +1,20 @@
-# Use the official PHP image
-FROM php:8.0-fpm
+FROM richarvey/nginx-php-fpm:1.7.2
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev libzip-dev unzip
-
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd \
-    && docker-php-ext-install zip
-
-# Set the working directory
-WORKDIR /var/www/html
-
-# Copy existing application directory contents
 COPY . .
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Image config
+ENV SKIP_COMPOSER 1
+ENV WEBROOT /var/www/html/public
+ENV PHP_ERRORS_STDERR 1
+ENV RUN_SCRIPTS 1
+ENV REAL_IP_HEADER 1
 
-# Install PHP dependencies
-RUN composer install
+# Laravel config
+ENV APP_ENV production
+ENV APP_DEBUG false
+ENV LOG_CHANNEL stderr
 
-# Expose port 80
-EXPOSE 80
+# Allow composer to run as root
+ENV COMPOSER_ALLOW_SUPERUSER 1
 
-# Command to run the application
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+CMD ["/start.sh"]
